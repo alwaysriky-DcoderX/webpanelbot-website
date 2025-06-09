@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Store Panel - Mill</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: white;
+      overflow-x: hidden;
+    }
+
+    video.bg-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+
+    header {
+      text-align: center;
+      padding: 20px;
+      background: #00b7eb;
+      color: white;
+      position: relative;
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .search-bar {
+      padding: 10px 20px;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+
+    .search-bar input {
+      width: 80%;
+      max-width: 400px;
+      padding: 10px;
+      border: 2px solid #00b7eb;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      font-size: 16px;
+    }
+
+    .container {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-height: calc(100vh - 100px);
+      overflow-y: auto;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+
+    .home {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .home h2 {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    .home .nav-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .home .nav-buttons button {
+      padding: 10px 20px;
+      font-weight: bold;
+      background: #00b7eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .category {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .category h2 {
+      width: 100%;
+      text-align: center;
+      margin: 10px 0;
+      font-size: 20px;
+    }
+
+    .category .product-list {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      gap: 20px;
+      padding: 10px;
+      scroll-snap-type: x mandatory;
+    }
+
+    .product {
+      flex: 0 0 auto;
+      width: 220px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      position: relative;
+      z-index: 1;
+      scroll-snap-align: start;
+    }
+
+    .product img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .product h3 {
+      color: #00b7eb;
+      margin: 10px 0;
+    }
+
+    .product p {
+      margin: 5px 0;
+    }
+
+    .product button {
+      padding: 10px 16px;
+      margin: 8px 4px 0 4px;
+      font-weight: bold;
+      background: #00b7eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 99;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.8);
+    }
+
+    .modal-content {
+      background-color: #2c2c2c;
+      margin: 5% auto;
+      padding: 20px;
+      width: 90%;
+      max-width: 420px;
+      border-radius: 10px;
+      position: relative;
+      text-align: center;
+    }
+
+    .modal-content img {
+      width: 100%;
+      margin-top: 10px;
+      border-radius: 8px;
+    }
+
+    .close {
+      color: #aaa;
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-admin {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 14px;
+      background: #00ffcc;
+      color: black;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .payment-buttons button {
+      background: #333;
+      color: white;
+      padding: 8px 14px;
+      border: 1px solid #555;
+      margin: 5px 3px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .payment-info {
+      margin-top: 15px;
+      padding: 10px;
+      background: #1a1a1a;
+      border-radius: 8px;
+    }
+
+    ::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #00ffcc;
+      border-radius: 8px;
+    }
+
+    /* Intro Styles */
+    .intro-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #121212;
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 1s ease;
+    }
+    .intro-container {
+      text-align: center;
+      color: white;
+    }
+    .robot-ai {
+      width: 280px;
+      height: 420px;
+      margin: 0 auto;
+      position: relative;
+      animation: floatWave 3s infinite ease-in-out;
+    }
+    .head {
+      width: 130px;
+      height: 150px;
+      background: radial-gradient(circle at 40% 30%, #00eaff, #1a1a3d 70%);
+      border-radius: 50% 50% 20% 20% / 60% 60% 30% 30%;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      overflow: hidden;
+      animation: pulseGlow 1.5s infinite;
+      box-shadow: 0 0 30px rgba(0, 234, 255, 0.8);
+    }
+    .visor {
+      width: 100px;
+      height: 60px;
+      background: linear-gradient(45deg, rgba(0, 234, 255, 0.6), rgba(178, 102, 255, 0.6));
+      position: absolute;
+      top: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 50% 50% / 60% 60%;
+      animation: flowVisor 2s infinite;
+      box-shadow: inset 0 0 15px rgba(0, 234, 255, 0.8);
+    }
+    .eyes {
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 40px;
+    }
+    .eye {
+      width: 18px;
+      height: 18px;
+      background: radial-gradient(circle, #fff, #00eaff);
+      border-radius: 50%;
+      animation: eyePulse 1.2s infinite;
+      box-shadow: 0 0 12px #00eaff;
+    }
+    .body {
+      width: 180px;
+      height: 220px;
+      background: radial-gradient(circle at 50% 80%, #1a1a3d, #00eaff 70%);
+      position: absolute;
+      top: 140px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 50% 50% / 40% 40% 60% 60%;
+      box-shadow: inset 0 0 30px #00eaff, 0 0 20px rgba(0, 234, 255, 0.5);
+      animation: bodyFlow 3s infinite;
+    }
+    .core {
+      width: 80px;
+      height: 80px;
+      background: radial-gradient(circle, #b266ff, #00eaff);
+      position: absolute;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      animation: corePulse 2s infinite;
+      box-shadow: 0 0 20px #b266ff;
+    }
+    .arm-left, .arm-right {
+      width: 40px;
+      height: 140px;
+      background: linear-gradient(45deg, #1a1a3d, #00eaff);
+      position: absolute;
+      top: 170px;
+      border-radius: 20px / 50px;
+      animation: armSwing 2.5s infinite;
+    }
+    .arm-left {
+      left: 20px;
+      transform-origin: top left;
+    }
+    .arm-right {
+      right: 20px;
+      transform-origin: top right;
+    }
+    .arm-glow-left, .arm-glow-right {
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, #00eaff, transparent);
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      animation: glowPulse 1.5s infinite;
+    }
+    .leg-left, .leg-right {
+      width: 40px;
+      height: 110px;
+      background: linear-gradient(45deg, #1a1a3d, #b266ff);
+      position: absolute;
+      top: 340px;
+      border-radius: 20px / 50px;
+    }
+    .leg-left {
+      left: 60px;
+      transform-origin: top;
+    }
+    .leg-right {
+      right: 60px;
+      transform-origin: top;
+    }
+    .leg-glow-left, .leg-glow-right {
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, #b266ff, transparent);
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      animation: glowPulse 1.5s infinite;
+    }
+    .aura {
+      width: 290px;
+      height: 430px;
+      background: radial-gradient(circle, rgba(0, 234, 255, 0.2), transparent 70%);
+      position: absolute;
+      top: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: auraPulse 4s infinite;
+      z-index: -1;
+    }
+    .intro-text {
+      margin-top: 20px;
+      opacity: 0;
+      animation: fadeIn 5s forwards;
+    }
+    .intro-text h1 {
+      font-size: 36px;
+      color: #00b7eb;
+      text-shadow: 0 0 15px #00b7eb;
+    }
+    .intro-text p#typingText {
+      font-size: 18px;
+      color: #00b7eb;
+      margin-top: 10px;
+      text-shadow: 0 0 10px rgba(0, 183, 235, 0.5);
+    }
+    .intro-text button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #00b7eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+      box-shadow: 0 0 15px rgba(0, 183, 235, 0.8);
+      transition: transform 0.2s;
+    }
+    .intro-text button:hover {
+      transform: scale(1.05);
+    }
+    @keyframes floatWave {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-10px) rotate(2deg); }
+      100% { transform: translateY(0) rotate(-2deg); }
+    }
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 20px rgba(0, 234, 255, 0.8); }
+      50% { box-shadow: 0 0 40px rgba(0, 234, 255, 1); }
+      100% { box-shadow: 0 0 20px rgba(0, 234, 255, 0.8); }
+    }
+    @keyframes flowVisor {
+      0% { transform: translateX(-50%) scale(1); }
+      50% { transform: translateX(-50%) scale(1.05) rotate(5deg); }
+      100% { transform: translateX(-50%) scale(1); }
+    }
+    @keyframes eyePulse {
+      0%, 80% { transform: scale(1); }
+      85%, 90% { transform: scale(0.8); }
+      95%, 100% { transform: scale(1); }
+    }
+    @keyframes bodyFlow {
+      0% { border-radius: 50% 50% / 40% 40% 60% 60%; }
+      50% { border-radius: 40% 40% / 50% 50% 60% 60%; }
+      100% { border-radius: 50% 50% / 40% 40% 60% 60%; }
+    }
+    @keyframes corePulse {
+      0% { transform: translateX(-50%) scale(1); }
+      50% { transform: translateX(-50%) scale(1.1); }
+      100% { transform: translateX(-50%) scale(1); }
+    }
+    @keyframes armSwing {
+      0% { transform: rotate(0deg); }
+      25% { transform: rotate(10deg); }
+      50% { transform: rotate(0deg); }
+      75% { transform: rotate(-10deg); }
+      100% { transform: rotate(0deg); }
+    }
+    @keyframes glowPulse {
+      0% { transform: translateX(-50%) scale(1); opacity: 0.7; }
+      50% { transform: translateX(-50%) scale(1.2); opacity: 1; }
+      100% { transform: translateX(-50%) scale(1); opacity: 0.7; }
+    }
+    @keyframes auraPulse {
+      0% { transform: translateX(-50%) scale(1); opacity: 0.2; }
+      50% { transform: translateX(-50%) scale(1.1); opacity: 0.4; }
+      100% { transform: translateX(-50%) scale(1); opacity: 0.2; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .robot-ai:hover .arm-left {
+      animation: armSwingHover 1.5s infinite;
+    }
+    .robot-ai:hover .arm-right {
+      animation: armSwingHover 1.5s infinite;
+    }
+    @keyframes armSwingHover {
+      0% { transform: rotate(0deg); }
+      50% { transform: rotate(15deg); }
+      100% { transform: rotate(0deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Video -->
+  <video class="bg-video" id="bgVideo" autoplay muted loop>
+    <source src="https://files.catbox.moe/ij86s0.mp4" type="video/mp4">
+  </video>
+
+  <!-- Background Audio -->
+  <audio id="bg-audio" autoplay loop hidden>
+    <source src="https://files.catbox.moe/mj4q99.mp3" type="audio/mp3" />
+  </audio>
+
+  <!-- Intro Overlay -->
+  <div class="intro-overlay" id="introOverlay">
+    <div class="intro-container">
+      <div class="robot-ai">
+        <div class="head">
+          <div class="visor"></div>
+          <div class="eyes">
+            <div class="eye"></div>
+            <div class="eye"></div>
+          </div>
+        </div>
+        <div class="body">
+          <div class="core"></div>
+        </div>
+        <div class="arm-left">
+          <div class="arm-glow-left"></div>
+        </div>
+        <div class="arm-right">
+          <div class="arm-glow-right"></div>
+        </div>
+        <div class="leg-left">
+          <div class="leg-glow-left"></div>
+        </div>
+        <div class="leg-right">
+          <div class="leg-glow-right"></div>
+        </div>
+        <div class="aura"></div>
+      </div>
+      <div class="intro-text">
+        <h1>Hi This is Mill Website</h1>
+        <p id="typingText"></p>
+        <button onclick="hideIntro()">Masuk</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Efek typing
+    const text = "Hello, Welcome to the Mill Store Website. Enjoy and Don't Forget to Buy the Products We Provide 🙂";
+    const typingText = document.getElementById("typingText");
+    let index = 0;
+
+    function type() {
+      if (index < text.length && typingText) {
+        typingText.innerHTML += text.charAt(index);
+        index++;
+        setTimeout(type, 100); // Delay 100ms per karakter
+      }
+    }
+
+    const bgAudio = document.getElementById("bg-audio");
+    bgAudio.play().catch(() => {
+      document.body.addEventListener("click", () => {
+        bgAudio.play();
+      }, { once: true });
+    });
+
+    // Hide intro and show main content after 5 minutes or on button click
+    function hideIntro() {
+      const intro = document.getElementById("introOverlay");
+      const bgVideo = document.getElementById("bgVideo");
+      const header = document.querySelector("header");
+      const searchBar = document.querySelector(".search-bar");
+      const container = document.querySelector(".container");
+
+      if (intro && bgVideo && header && searchBar && container) {
+        intro.style.opacity = "0";
+        setTimeout(() => {
+          intro.style.display = "none";
+          bgVideo.style.opacity = "1";
+          header.style.opacity = "1";
+          searchBar.style.opacity = "1";
+          container.style.opacity = "1";
+        }, 1000);
+      }
+    }
+    setTimeout(hideIntro, 300000); // 5 menit = 300,000 ms
+
+    function showModal(nama, harga) {
+      const modal = document.getElementById("paymentModal");
+      const modalProduct = document.getElementById("modalProduct");
+      const paymentInfo = document.getElementById("paymentInfo");
+      const selesaiBayarBtn = document.getElementById("selesaiBayar");
+      if (modal && modalProduct && paymentInfo && selesaiBayarBtn) {
+        modal.style.display = "block";
+        modalProduct.textContent = `Pembayaran - ${nama}`;
+        paymentInfo.innerHTML = "Pilih metode pembayaran di atas.";
+        const message = encodeURIComponent(`Halo Admin, saya sudah selesai membayar untuk [${nama}]`);
+        selesaiBayarBtn.href = `https://wa.me/6283835101684?text=${message}`;
+      }
+    }
+
+    function closeModal() {
+      const modal = document.getElementById("paymentModal");
+      if (modal) modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+      const modal = document.getElementById("paymentModal");
+      if (modal && event.target == modal) modal.style.display = "none";
+    }
+
+    function showPayment(method) {
+      let info = "";
+      switch (method) {
+        case 'DANA':
+          info = "<b>DANA:</b> 085640593620";
+          break;
+        case 'GOPAY':
+          info = "<b>GOPAY:</b> 6285640593620";
+          break;
+        case 'OVO':
+          info = "<b>OVO:</b> tidak sedia";
+          break;
+        case 'QRIS':
+          info = `<b>QRIS:
+      minta ke Mill;">`;
+          break;
+      }
+      const paymentInfo = document.getElementById("paymentInfo");
+      if (paymentInfo) paymentInfo.innerHTML = info;
+    }
+
+    function showSection(sectionId) {
+      const sections = ['homeSection', 'panelAdmin', 'panelRAM', 'vpsDigital'];
+      sections.forEach(id => {
+        const section = document.getElementById(id);
+        if (section) section.style.display = id === sectionId ? 'block' : 'none';
+      });
+    }
+
+    function filterProducts() {
+      const input = document.getElementById('searchInput')?.value.toLowerCase() || '';
+      const products = document.querySelectorAll('.product');
+      products.forEach(product => {
+        const name = product.querySelector('h3')?.textContent.toLowerCase() || '';
+        product.style.display = name.includes(input) ? 'block' : 'none';
+      });
+    }
+
+    window.onload = () => {
+      type(); // Jalankan efek typing
+      showSection('homeSection'); // Inisialisasi halaman
+    };
+  </script>
+
+  <header>
+    <h1>Hi This is Mill Website</h1>
+  </header>
+
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Cari produk..." onkeyup="filterProducts()">
+  </div>
+
+  <div class="container" id="mainContainer">
+    <!-- Beranda -->
+    <div class="home" id="homeSection">
+      <h2>Selamat Datang di Mill!</h2>
+      <div class="nav-buttons">
+        <button onclick="showSection('panelAdmin')">Panel Reseller panel</button>
+        <button onclick="showSection('panelRAM')">Panel RAM</button>
+        <button onclick="showSection('vpsDigital')">sewa bot bug/puskontak</button>
+      </div>
+    </div>
+
+    <!-- Reseller Panel !-->
+    <div class="category" id="panelAdmin" style="display: none;">
+      <h2>Panel Reseller</h2>
+      <button onclick="showSection('homeSection')" style="margin: 10px auto; display: block; padding: 10px; background: #00b7eb; color: white; border: none; border-radius: 6px; cursor: pointer;">Kembali ke Beranda</button>
+      <div class="product-list">
+        <div class="product">
+          <img src="https://files.catbox.moe/8lq79s.jpg" alt="Reseller Panel">
+          <h3>Reseller Panel</h3>
+          <p>Rp 5.000 permanen</p>
+          <button onclick="showModal('Reseller Panel', 'Rp 5.000/Bulan')">Beli</button>
+        </div>
+        <div class="product">
+          <img src="https://files.catbox.moe/8lq79s.jpg" alt="Admin Panel">
+          <h3>Reseller panel permanen</h3>
+          <p>Rp 10.000 permenen</p>
+          <button onclick="showModal('Admin Panel', 'Rp 10.000/Bulan')">Beli</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel RAM -->
+    <div class="category" id="panelRAM" style="display: none;">
+      <h2>Panel RAM</h2>
+      <button onclick="showSection('homeSection')" style="margin: 10px auto; display: block; padding: 10px; background: #00b7eb; color: white; border: none; border-radius: 6px; cursor: pointer;">Kembali ke Beranda</button>
+      <div class="product-list">
+        <div class="product">
+          <img src="https://files.catbox.moe/8lq79s.jpg" alt="Ram 1GB">
+          <h3>Ram 1GB</h3>
+          <p>Rp 1.000/Bulan</p>
+          <button onclick="showModal('Ram 1GB', 'Rp 1.000/Bulan')">Beli</button>
+        </div>
+        <div class="product">
+          <img src="https://files.catbox.moe/8lq79s.jpg" alt="Ram 2GB">
+          <h3>Ram 2GB</h3>
+          <p>Rp 2.000/Bulan</p>
+          <button onclick="showModal('Ram 2GB', 'Rp 1.200/Bulan')">Beli</button>
+        </div>
+        <div class="product">
+          <img src="https://files.catbox.moe/8lq79s.jpg" alt="Ram 3GB">
+          <h3>Ram 3GB</h3>
+          <p>Rp 3.000/Bulan</p>
+          <button onclick="showModal('Ram 3GB', 'Rp 1.500.000/Bulan')">Beli</button>
+        </div>
+        <div class="product">
+          <img src="https://files.catbox.moe/8lq79s.jpg" alt="Ram 4GB">
+          <h3>Ram 4GB</h3>
+          <p>Rp 2.000/Bulan</p>
+          <button onclick="showModal('Ram 4GB', 'Rp 2.000/Bulan')">Beli</button>
+        </div>
+        <div class="product">
+          <img src="https://files.catbox.moe/8lq79s.jpg" alt="Ram 5GB">
+          <h3>Ram 5GB</h3>
+          <p>Rp 5.000/Bulan</p>
+          <button onclick="showModal('Ram 5GB', 'Rp 2.500/Bulan')">Beli</button>
+        </div>
+        <div class="product">
+          <img src="https://files.catbox.moe/8lq79s.jpg" alt="Ram 6GB">
+          <h3>Ram 6GB</h3>
+          <p>Rp 6.000/Bulan</p>
+          <button onclick="showModal('Ram 6GB', 'Rp 3.000/Bulan')">Beli</button>
+        </div>
+        <div class="product">
+          <img src="https://files.catbox.moe/8lq79s.jpg" alt="Ram 7GB">
+          <h3>Ram 7GB</h3>
+          <p>Rp 7.000/Bulan</p>
+          <button onclick="showModal('Ram 7GB', 'Rp 3.500/Bulan')">Beli</button>
+        </div>
+        <div class="product">
+          <img src="https://files.catbox.moe/8lq79s.jpg" alt="Ram 8GB">
+          <h3>Ram 8GB</h3>
+          <p>Rp 8.000/Bulan</p>
+          <button onclick="showModal('Ram 8GB', 'Rp 4.000/Bulan')">Beli</button>
+        </div>
+        <div class="product">
+          <img src="https://files.catbox.moe/8lq79s.jpg" alt="Ram 9GB">
+          <h3>Ram 9GB</h3>
+          <p>Rp 9.000/Bulan</p>
+          <button onclick="showModal('Ram 9GB', 'Rp .500/Bulan')">Beli</button>
+        </div>
+        <div class="product">
+          <img src="https://files.catbox.moe/8lq79s.jpg" alt="Ram Unlimited">
+          <h3>Ram Unlimited</h3>
+          <p>Rp 10.000/Bulan</p>
+          <button onclick="showModal('Ram Unlimited', 'Rp 5.000/Bulan')">Beli</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VPS Digital Ocean -->
+    <div class="category" id="vpsDigital" style="display: none;">
+      <h2>sewa bot push/bug</h2>
+      <button onclick="showSection('homeSection')" style="margin: 10px auto; display: block; padding: 10px; background: #00b7eb; color: white; border: none; border-radius: 6px; cursor: pointer;">Kembali ke Beranda</button>
+      <div class="product-list">
+        <div class="product">
+          <img src="https://files.catbox.moe/znsmkq.jpg" alt="1HARI SEWA">
+          <h3>1 HARI SEWA PSUH/BUG</h3>
+          <p>Rp 3.000/Bulan</p>
+          <button onclick="showModal('1 HARI SEWA BOT', 'Rp 3.000')">Beli</button>
+        </div>
+        <div class="product">
+          <img src="https://files.catbox.moe/znsmkq.jpg" alt="3 HARI SEWA">
+          <h3>3 HARI SEWA PSUH/BUG</h3>
+          <p>Rp 5.000/Bulan</p>
+          <button onclick="showModal('', 'Rp 5.000')">Beli</button>
+        </div>
+        <div class="product">
+          <img src="https://files.catbox.moe/znsmkq.jpg" alt="1 MINGU SEWA">
+          <h3>1 MINGU SEWA PUSH/BUG</h3>
+          <p>Rp 7.000</p>
+          <button onclick="showModal('1 MINGU SEWA BOT', 'Rp 7.000')">Beli</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div id="paymentModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">×</span>
+      <h3 id="modalProduct">Pembayaran</h3>
+      <div class="payment-buttons">
+        <button onclick="showPayment('DANA')">💰 DANA</button>
+        <button onclick="showPayment('GOPAY')">📱 GOPAY</button>
+        <button onclick="showPayment('OVO')">🟣 OVO</button>
+        <button onclick="showPayment('QRIS')">📸 QRIS</button>
+      </div>
+      <div class="payment-info" id="paymentInfo">Pilih metode pembayaran di atas.</div>
+      <a id="selesaiBayar" href="#" class="btn-admin" target="_blank">✅ Selesai Bayar</a>
+    </div>
+  </div>
+</body>
+</html>
